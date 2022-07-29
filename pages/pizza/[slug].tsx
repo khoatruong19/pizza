@@ -1,7 +1,8 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import arrowLeft from '../../assets/arrowLeft.png';
 import arrowRight from '../../assets/arrowRight.png';
@@ -20,11 +21,44 @@ interface IProps {
   pizza: Pizza;
 }
 
+export const getStaticPaths: GetStaticPaths<Params> = async () => {
+  try {
+    const slugs: Slug[] = await client.fetch(`*[_type=="pizza"]{slug}`);
+    const paths = slugs.map((slug) => ({
+      params: {
+        slug: `${slug.current}`,
+      },
+    }));
+    return {
+      paths,
+      fallback: false,
+    };
+  } catch (er) {
+    console.error(er);
+    return { paths: [], fallback: false };
+  }
+};
+
+export const getStaticProps: GetStaticProps<IProps, Params> = async ({
+  params,
+}) => {
+  const slug = params?.slug!;
+  const pizza = await client.fetch(
+    `*[_type=="pizza" && slug.current == '${slug}'][0]`
+  );
+  return {
+    props: {
+      pizza,
+    },
+  };
+};
+
 const PizzaDetailPage = ({ pizza }: IProps) => {
-  const src = urlFor(pizza.image).url();
+  const router = useRouter();
+
+  const src = pizza && urlFor(pizza.image).url();
   const [size, setSize] = useState(1);
   const [quantity, setQuantity] = useState(1);
-
   const handleQuantity = (action: string) => {
     action === 'inc'
       ? setQuantity((prev) => prev + 1)
@@ -42,24 +76,26 @@ const PizzaDetailPage = ({ pizza }: IProps) => {
     <Layout>
       <div className={css.container}>
         <div className={css.imageContainer}>
-          <Image
-            loader={() => src}
-            src={src}
-            alt=""
-            layout="fill"
-            unoptimized
-            objectFit="cover"
-          />
+          {pizza && (
+            <Image
+              loader={() => src}
+              src={src}
+              alt=""
+              layout="fill"
+              unoptimized
+              objectFit="cover"
+            />
+          )}
         </div>
 
         <div className={css.right}>
-          <span>{pizza.name}</span>
-          <span>{pizza.details}</span>
+          <span>{pizza?.name}</span>
+          <span>{pizza?.details}</span>
 
           <span>
             {' '}
             <span style={{ color: 'var(--themeRed' }}>$ </span>
-            {pizza.price[size]}
+            {pizza?.price[size]}
           </span>
           <div className={css.size}>
             <span>Size</span>
@@ -122,30 +158,3 @@ const PizzaDetailPage = ({ pizza }: IProps) => {
 };
 
 export default PizzaDetailPage;
-
-export const getStaticPaths: GetStaticPaths<Params> = async () => {
-  const slugs: Slug[] = await client.fetch(`*[_type=="pizza"]{slug}`);
-  const paths = slugs.map((slug) => ({
-    params: {
-      slug: `${slug.current}`,
-    },
-  }));
-  return {
-    paths,
-    fallback: 'blocking',
-  };
-};
-
-export const getStaticProps: GetStaticProps<IProps, Params> = async ({
-  params,
-}) => {
-  const slug = params?.slug!;
-  const pizza = await client.fetch(
-    `*[_type=="pizza" && slug.current == '${slug}'][0]`
-  );
-  return {
-    props: {
-      pizza,
-    },
-  };
-};
