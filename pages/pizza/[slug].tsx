@@ -21,41 +21,7 @@ interface IProps {
   pizza: Pizza;
 }
 
-export const getStaticPaths: GetStaticPaths<Params> = async () => {
-  try {
-    const slugs: Slug[] = await client.fetch(`*[_type=="pizza"]{slug}`);
-    const paths = slugs.map((slug) => ({
-      params: {
-        slug: `${slug.current}`,
-      },
-    }));
-    return {
-      paths,
-      fallback: false,
-    };
-  } catch (er) {
-    console.error(er);
-    return { paths: [], fallback: false };
-  }
-};
-
-export const getStaticProps: GetStaticProps<IProps, Params> = async ({
-  params,
-}) => {
-  const slug = params?.slug!;
-  const pizza = await client.fetch(
-    `*[_type=="pizza" && slug.current == '${slug}'][0]`
-  );
-  return {
-    props: {
-      pizza,
-    },
-  };
-};
-
 const PizzaDetailPage = ({ pizza }: IProps) => {
-  const router = useRouter();
-
   const src = pizza && urlFor(pizza.image).url();
   const [size, setSize] = useState(1);
   const [quantity, setQuantity] = useState(1);
@@ -158,3 +124,30 @@ const PizzaDetailPage = ({ pizza }: IProps) => {
 };
 
 export default PizzaDetailPage;
+
+export const getStaticPaths: GetStaticPaths<Params> = async () => {
+  const slugs: Slug[] = await client.fetch(`*[_type=="pizza"]{slug}`);
+  const paths = slugs.map((slug) => ({
+    params: {
+      slug: `${slug.current}`,
+    },
+  }));
+  return {
+    paths,
+    fallback: 'blocking',
+  };
+};
+
+export const getStaticProps: GetStaticProps<IProps, Params> = async ({
+  params,
+}) => {
+  const slug = params?.slug!;
+  const pizza = await client.fetch(
+    `*[_type=="pizza" && slug.current == '${slug}'][0]`
+  );
+  return {
+    props: {
+      pizza,
+    },
+  };
+};
