@@ -21,7 +21,9 @@ interface IProps {
 }
 
 const PizzaDetailPage = ({ pizza }: IProps) => {
-  const src = urlFor(pizza?.image).url();
+  if (!pizza) return null;
+
+  const src = urlFor(pizza.image).url();
   const [size, setSize] = useState(1);
   const [quantity, setQuantity] = useState(1);
 

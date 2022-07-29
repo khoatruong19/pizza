@@ -13,7 +13,9 @@ const CartPage = () => {
   const cartData = useStore((state) => state.cart);
   const removePizza = useStore((state) => state.removePizza);
   const [paymentMethod, setPaymentMethod] = useState<0 | 1 | 2>(2);
-  const [order, setOrder] = useState<string>('');
+  const [order, setOrder] = useState<string>(
+    (typeof window !== 'undefined' && localStorage.getItem('order')) || ''
+  );
   const router = useRouter();
 
   const handleDeleteCartItem = (i: number) => {
@@ -47,10 +49,6 @@ const CartPage = () => {
     router.push(`${data.url}`);
   };
 
-  useEffect(() => {
-    typeof window !== 'undefined' &&
-      setOrder(localStorage.getItem('order') as string);
-  }, [localStorage.getItem('order')]);
   return (
     <Layout>
       <div className={css.container}>
