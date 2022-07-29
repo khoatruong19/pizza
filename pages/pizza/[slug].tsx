@@ -11,6 +11,7 @@ import arrowLeft from '../../assets/arrowLeft.png';
 import arrowRight from '../../assets/arrowRight.png';
 import { useStore } from '../../store';
 import toast, { Toaster } from 'react-hot-toast';
+import { useRouter } from 'next/router';
 
 interface Params extends ParsedUrlQuery {
   slug: string;
@@ -21,6 +22,11 @@ interface IProps {
 }
 
 const PizzaDetailPage = ({ pizza }: IProps) => {
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <h1>Loading...</h1>;
+  }
   const src = urlFor(pizza.image).url();
   const [size, setSize] = useState(1);
   const [quantity, setQuantity] = useState(1);
@@ -134,7 +140,7 @@ export const getStaticPaths: GetStaticPaths<Params> = async () => {
   }));
   return {
     paths,
-    fallback: false,
+    fallback: true,
   };
 };
 
