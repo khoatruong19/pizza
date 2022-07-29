@@ -21,8 +21,6 @@ interface IProps {
 }
 
 const PizzaDetailPage = ({ pizza }: IProps) => {
-  if (!pizza) return null;
-
   const src = urlFor(pizza.image).url();
   const [size, setSize] = useState(1);
   const [quantity, setQuantity] = useState(1);
@@ -39,6 +37,8 @@ const PizzaDetailPage = ({ pizza }: IProps) => {
     addPizza({ ...pizza, price: pizza.price[size], quantity, size });
     toast.success('Added to cart!!');
   };
+
+  if (!pizza) return null;
 
   return (
     <Layout>
