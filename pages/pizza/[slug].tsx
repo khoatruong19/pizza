@@ -1,17 +1,16 @@
-import { GetStaticPaths, NextPageContext, GetStaticProps } from 'next';
-import React, { useEffect, useState } from 'react';
-import Layout from '../../components/Layout';
-import { client, urlFor } from '../../lib/client';
-import { Pizza } from '../../types/Pizza.type';
-import { ParsedUrlQuery } from 'querystring';
-import { Slug } from '../../types/GeneralInfo.type';
+import { GetStaticPaths, GetStaticProps } from 'next';
 import Image from 'next/image';
-import css from '../../styles/Pizza.module.css';
+import { ParsedUrlQuery } from 'querystring';
+import { useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 import arrowLeft from '../../assets/arrowLeft.png';
 import arrowRight from '../../assets/arrowRight.png';
+import Layout from '../../components/Layout';
+import { client, urlFor } from '../../lib/client';
 import { useStore } from '../../store';
-import toast, { Toaster } from 'react-hot-toast';
-import { useRouter } from 'next/router';
+import css from '../../styles/Pizza.module.css';
+import { Slug } from '../../types/GeneralInfo.type';
+import { Pizza } from '../../types/Pizza.type';
 
 interface Params extends ParsedUrlQuery {
   slug: string;
@@ -22,11 +21,6 @@ interface IProps {
 }
 
 const PizzaDetailPage = ({ pizza }: IProps) => {
-  const router = useRouter();
-
-  if (router.isFallback) {
-    return <h1>Loading...</h1>;
-  }
   const src = urlFor(pizza.image).url();
   const [size, setSize] = useState(1);
   const [quantity, setQuantity] = useState(1);
@@ -43,8 +37,6 @@ const PizzaDetailPage = ({ pizza }: IProps) => {
     addPizza({ ...pizza, price: pizza.price[size], quantity, size });
     toast.success('Added to cart!!');
   };
-
-  if (!pizza) return null;
 
   return (
     <Layout>
@@ -140,14 +132,14 @@ export const getStaticPaths: GetStaticPaths<Params> = async () => {
   }));
   return {
     paths,
-    fallback: true,
+    fallback: 'blocking',
   };
 };
 
-export const getStaticProps: GetStaticProps<IProps, Params> = async (
-  context
-) => {
-  const slug = context.params?.slug;
+export const getStaticProps: GetStaticProps<IProps, Params> = async ({
+  params,
+}) => {
+  const slug = params?.slug!;
   const pizza = await client.fetch(
     `*[_type=="pizza" && slug.current == '${slug}'][0]`
   );
